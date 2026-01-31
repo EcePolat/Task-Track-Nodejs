@@ -4,62 +4,42 @@ var router = express.Router();
 const RecordService = require("../services/record.service");
 const Enum = require("../config/Enum");
 const Response = require("../lib/Response");
+const asyncHandler = require("../middlewares/asyncHandler");
+const errorHandler = require("../middlewares/errorHandler");
 
-router.post("/", async(req, res) => {
+router.post("/", asyncHandler(async(req, res) => {
 
-    try{
-        const record = await RecordService.create(req.body);
-        res.status(Enum.HTTP_CODES.CREATED).json(Response.successResponse(record));
-    } catch(err){
-        let errorResponse = Response.errorResponse(err);
-        res.status(errorResponse.code).json(errorResponse);
-    }
+    const record = await RecordService.create(req.body);
+    res.status(Enum.HTTP_CODES.CREATED).json(Response.successResponse(record));
 
-});
+}));
 
-router.get("/", async(req, res) => {
+router.get("/", asyncHandler(async(req, res) => {
 
-    try{
-        const records = await RecordService.list();
-        res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(records));
-    } catch(err){
-        let errorResponse = Response.errorResponse(err);
-        res.status(errorResponse.code).json(errorResponse);
-    }
-});
-
-router.get("/:id", async(req, res) => {
-
-    try{
-        const record = await RecordService.getById(req.params.id);
-        res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(record));
-    } catch(err){
-        let errorResponse = Response.errorResponse(err);
-        res.status(errorResponse.code).json(errorResponse);
-    }
-});
-
-router.put("/:id", async(req, res) => {
-
-    try{
-        const updatedRecord = await RecordService.update(req.params.id, req.body);
-        res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(updatedRecord));
-    } catch(err) {
-        let errorResponse = Response.errorResponse(err);
-        res.status(errorResponse.code).json(Response.errorResponse(err));
-    }
-
-});
-
-router.delete("/:id", async(req, res) => {
+    const records = await RecordService.list(req.query);
+    res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(records));
     
-    try{
-        const deletedRecord = await RecordService.delete(req.params.id);
-        res.status(Enum.HTTP_CODES.OK).json(Response.successResponse({success: true}));
-    } catch(err){
-        let errorResponse = Response.errorResponse(err);
-        res.status(errorResponse.code).json(errorResponse);
-    }
-});
+}));
+
+router.get("/:id", asyncHandler(async(req, res) => {
+
+    const record = await RecordService.getById(req.params.id);
+    res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(record));
+    
+}));
+
+router.put("/:id", asyncHandler(async(req, res) => {
+
+    const updatedRecord = await RecordService.update(req.params.id, req.body);
+    res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(updatedRecord));
+    
+}));
+
+router.delete("/:id", asyncHandler(async(req, res) => {
+    
+    const deletedRecord = await RecordService.delete(req.params.id);
+    res.status(Enum.HTTP_CODES.OK).json(Response.successResponse({success: true}));
+    
+}));
 
 module.exports = router;
