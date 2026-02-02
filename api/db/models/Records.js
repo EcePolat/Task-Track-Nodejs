@@ -5,6 +5,11 @@ const schema = mongoose.Schema({
     title: {type: String, required: true},
     description: {type: String, required: false},
     status: {type: String, enum: Object.values(Enum.RECORD_STATUS), default: Enum.RECORD_STATUS.OPEN},
+    user_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "users",
+        required: true
+    }
 }, {
     versionKey: false,
     timestamps: {

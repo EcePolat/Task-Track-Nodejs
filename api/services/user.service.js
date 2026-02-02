@@ -2,6 +2,7 @@ const Users = require("../db/models/Users");
 const Enum = require("../config/Enum");
 const CustomError = require("../lib/Error");
 const is = require("is_js");
+const bcrypt = require("bcrypt");
 
 class UserService{
 
@@ -41,12 +42,17 @@ class UserService{
             );
         }
 
+        let hashedPassword = await bcrypt.hash(data.password, 10);
+
         const user = await Users.create({
             email: data.email,
-            password: data.password,
+            password: hashedPassword,
             firstName: data.firstName,
             lastName: data.lastName,
         });
+
+        // const userObj = user.toObject();
+        // delete userObj.password;
 
         return user;
     }

@@ -18,6 +18,7 @@ class RecordService{
 
             title: data.title,
             description: data.description,
+            user_id: data.user_id,
             status: Enum.RECORD_STATUS.OPEN
         });
 
