@@ -3,6 +3,8 @@ const Enum = require("../config/Enum");
 const CustomError = require("../lib/Error");
 const is = require("is_js");
 const bcrypt = require("bcrypt");
+const Role = require("../db/models/Roles");
+const Roles = require("../db/models/Roles");
 
 class UserService{
 
@@ -42,6 +44,16 @@ class UserService{
             );
         }
 
+        const userRole = await Roles.findOne({name: "user"});
+
+        if(!userRole){
+            throw new CustomError(
+                Enum.HTTP_CODES.INT_SERVER_ERROR,
+                "System Error",
+                "Default user role not found"
+            );
+        }
+
         let hashedPassword = await bcrypt.hash(data.password, 10);
 
         const user = await Users.create({
@@ -49,6 +61,7 @@ class UserService{
             password: hashedPassword,
             firstName: data.firstName,
             lastName: data.lastName,
+            role_id: userRole._id
         });
 
         // const userObj = user.toObject();
@@ -120,23 +133,17 @@ class UserService{
         return user;
     }
     
-    static async update(id, data){
+    static async update(userId, data){
         
-        if(!id){
-            throw new CustomError(
-                Enum.HTTP_CODES.BAD_REQUEST,
-                "Validation Error!",
-                "id field must be filled"
-            );
-        }
-
         const updates = {};
 
+        const hashedPassword = await bcrypt.hash(data.password, 10);
+
         if(data.email) updates.email = data.email;
-        if(data.password) updates.password = data.password;
+        if(data.password) updates.password = hashedPassword;
         if(data.firstName) updates.firstName = data.firstName;
         if(data.lastName) updates.lastName = data.lastName;
-        if(data.is_active) updates.is_active = data.is_active;
+        if(typeof data.is_active === "boolean") updates.is_active = data.is_active;
 
         if(Object.keys(updates).length === 0){
             throw new CustomError(
@@ -146,48 +153,18 @@ class UserService{
             );
         }
 
-        const updatedUser = await Users.findByIdAndUpdate(
-            id,
+        return Users.findByIdAndUpdate(
+            userId,
             updates,
-            {
-                new: true,
-                runValidators: true
-            }
+            { new: true, runValidators: true}
         );
-
-        if(!updatedUser){
-            throw new CustomError(
-                Enum.HTTP_CODES.NOT_FOUND,
-                "Not found",
-                "User not found"
-            );
-        }
-
-        return updatedUser;
     }
 
-    static async delete(id){
+    static async delete(userId){
 
-        if(!id){
-            throw new CustomError(
-                Enum.HTTP_CODES.BAD_REQUEST,
-                "Validation Error!",
-                "id field must be filled"
-            );
-        }
+        await Users.findByIdAndDelete(userId);
 
-        const deletedUser = await Users.findByIdAndDelete(id);
-
-        if(!deletedUser){
-            throw new CustomError(
-                Enum.HTTP_CODES.NOT_FOUND,
-                "Not found",
-                "User not found"
-            );
-        }
-
-        return deletedUser;
-
+        return { success: true};
     }
 
 }

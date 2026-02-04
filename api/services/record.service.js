@@ -4,7 +4,7 @@ const Enum = require("../config/Enum");
 
 class RecordService{
 
-    static async create(data){
+    static async create(data, userId){
 
         if(!data.title){
             throw new CustomError(
@@ -18,14 +18,14 @@ class RecordService{
 
             title: data.title,
             description: data.description,
-            user_id: data.user_id,
+            user_id: userId,
             status: Enum.RECORD_STATUS.OPEN
         });
 
         return record;
     }
 
-    static async list(query){
+    static async list(query, userId){
 
         let page = parseInt(query.page) || 1;
         let limit = parseInt(query.limit) || 2;
@@ -35,7 +35,9 @@ class RecordService{
 
         const skip = (page - 1) * limit;
 
-        const filter = {};
+        const filter = {
+            user_id: userId
+        };
 
         if(query.status){
             filter.status = query.status;
@@ -75,7 +77,7 @@ class RecordService{
         };
     }
 
-    static async getById(id){
+    static async getById(id, userId){
 
         if(!id){
             throw new CustomError(
@@ -95,16 +97,42 @@ class RecordService{
             )
         }
 
+        if(record.user_id !== userId){
+            throw new CustomError(
+                Enum.HTTP_CODES.FORBIDDEN,
+                "Forbidden",
+                "You do not have access to this record"
+            );
+        }
+
         return record;
     }
 
-    static async update(id, data){
+    static async update(id, data, userId){
 
         if(!id){
             throw new CustomError(
                 Enum.HTTP_CODES.BAD_REQUEST,
                 "Validation Error!",
                 "id must be filled"
+            );
+        }
+
+        const record = await Records.findById(id);
+
+        if(!record){
+            throw new CustomError(
+                Enum.HTTP_CODES.NOT_FOUND,
+                "Not found",
+                "Record not found"
+            );
+        }
+
+        if(record.user_id.toString() !== userId){
+            throw new CustomError(
+                Enum.HTTP_CODES.FORBIDDEN,
+                "Forbidden",
+                "You cannot update this record"
             );
         }
 
@@ -131,18 +159,10 @@ class RecordService{
             }
         );
 
-        if(!updatedRecord){
-            throw new CustomError(
-                Enum.HTTP_CODES.NOT_FOUND,
-                "Not Found",
-                "Record not found"
-            );
-        }
-
         return updatedRecord;
     }
 
-    static async delete(id){
+    static async delete(id, userId){
 
         if(!id){
             throw new CustomError(
@@ -152,15 +172,25 @@ class RecordService{
             );
         }
 
-        const deletedRecord = await Records.findByIdAndDelete(id);
+        const record = await Records.findById(id);
 
-        if(!deletedRecord){
+        if(!record){
             throw new CustomError(
                 Enum.HTTP_CODES.NOT_FOUND,
                 "Not found",
                 "Record not found"
             );
         }
+
+        if(record.user_id.toString() !== userId){
+            throw new CustomError(
+                Enum.HTTP_CODES.FORBIDDEN,
+                "Forbidden",
+                "You cannot delete this record"
+            );
+        }
+
+        const deletedRecord = await Records.findByIdAndDelete(id);
 
         return deletedRecord;
 
