@@ -5,6 +5,11 @@ const schema = mongoose.Schema({
     password: {type: String, required: true, select: false},
     firstName: {type: String},
     lastName: {type: String},
+    role_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "roles",
+        required: true
+    },
     is_active: {type: Boolean, default: true}
 }, {
     versionKey: false,

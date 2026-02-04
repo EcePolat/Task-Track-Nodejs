@@ -9,6 +9,10 @@ var debug = require('debug')('api:server');
 var http = require('http');
 var Database = require('../db/Database');
 const { CONNECTION_STRING, PORT } = require('../config');
+const Role = require("../db/models/Roles");
+const Users = require("../db/models/Users");
+const bcrypt = require("bcrypt");
+const { PRIVILEGES } = require("../config/privileges");
 
 /**
  * Get port from environment and store in Express.
@@ -83,12 +87,54 @@ function onError(error) {
  * Event listener for HTTP server "listening" event.
  */
 
-function onListening() {
+async function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 
-  new Database().connect({CONNECTION_STRING})
+  await new Database().connect({CONNECTION_STRING});
+
+  let userRole = await Role.findOne({ name: "user"});
+
+  if(!userRole) {
+    userRole = await Role.create({
+      name: "user",
+      permissions: [
+        PRIVILEGES.RECORD_CREATE.key,
+        PRIVILEGES.RECORD_VIEW.key,
+        PRIVILEGES.RECORD_UPDATE.key,
+        PRIVILEGES.RECORD_DELETE.key,
+        PRIVILEGES.USER_UPDATE.key
+      ]
+    });
+    console.log("User role created");
+  }
+
+  let adminRole = await Role.findOne({ name: "admin" });
+
+  if(!adminRole){
+    adminRole = await Role.create({
+      name: "admin",
+      permissions: Object.values(PRIVILEGES).map(p => p.key)
+    });
+    console.log("Admin role created");
+  }
+
+  const adminExists = await Users.findOne({role_id: adminRole._id});
+
+  if(!adminExists){
+    const hashedPassword = await bcrypt.hash(process.env.INIT_ADMIN_PASSWORD, 10);
+
+    await Users.create({
+      email: process.env.INIT_ADMIN_EMAIL,
+      password: hashedPassword,
+      firstName: "System",
+      lastName: "Admin",
+      role_id: adminRole._id
+    });
+
+    console.log("Initial admin is created");
+  }
 }
