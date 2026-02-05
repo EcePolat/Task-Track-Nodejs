@@ -5,6 +5,7 @@ const schema = mongoose.Schema({
     name: { type: String, required: true, unique: true},
     permissions: { type: [String], required: true},
 }, {
+    versionKey: false,
     timestamps: true
 });
 

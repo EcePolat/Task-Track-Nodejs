@@ -49,10 +49,10 @@ module.exports = async (req, res, next) => {
         next();
         
     } catch(err){
-        throw new CustomError(
+        next(new CustomError(
             Enum.HTTP_CODES.UNAUTHORIZED,
             "Unauthorized",
             "Invalid or expired token"
-        );
+        ));
     }
 }
