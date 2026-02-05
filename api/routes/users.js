@@ -7,6 +7,8 @@ const errorHandler = require("../middlewares/errorHandler");
 const Enum = require("../config/Enum");
 const Response = require("../lib/Response");
 const auth = require("../middlewares/auth");
+const permission = require("../middlewares/permission");
+const { PRIVILEGES } = require("../config/privileges");
 
 router.post('/', asyncHandler(async (req, res) => {
 
@@ -15,14 +17,14 @@ router.post('/', asyncHandler(async (req, res) => {
 
 }));
 
-router.get("/", asyncHandler( async(req, res) => {
+router.get("/", auth, permission(PRIVILEGES.USER_VIEW.key), asyncHandler( async(req, res) => {
 
   const users = await UserService.list(req.query);
   res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(users));
 
 }));
 
-router.get("/:id", asyncHandler(async (req, res) => {
+router.get("/:id", auth, permission(PRIVILEGES.USER_VIEW.key), asyncHandler(async (req, res) => {
 
   const user = await UserService.getById(req.params.id);
   res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(user));
@@ -38,9 +40,15 @@ router.put("/me", auth, asyncHandler( async (req, res) => {
 
 router.delete("/me", auth, asyncHandler( async (req, res) => {
 
-  const deletedUser = await UserService.delete(req.user.id);
+  await UserService.delete(req.user.id);
   res.status(Enum.HTTP_CODES.OK).json(Response.successResponse({success: true}));
 
+}));
+
+router.delete("/:id", auth, permission(PRIVILEGES.USER_DELETE.key), asyncHandler(async(req, res) => {
+
+  await UserService.delete(req.params.id);
+  res.status(Enum.HTTP_CODES.OK).json(Response.successResponse({ success: true}));
 }));
 
 module.exports = router;

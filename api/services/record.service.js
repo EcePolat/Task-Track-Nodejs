@@ -25,7 +25,7 @@ class RecordService{
         return record;
     }
 
-    static async list(query, userId){
+    static async list(query, userId, role){
 
         let page = parseInt(query.page) || 1;
         let limit = parseInt(query.limit) || 2;
@@ -35,9 +35,11 @@ class RecordService{
 
         const skip = (page - 1) * limit;
 
-        const filter = {
-            user_id: userId
-        };
+        const filter = {};
+
+        if(role !== "admin"){
+            filter.user_id = userId;
+        }
 
         if(query.status){
             filter.status = query.status;
@@ -77,11 +79,11 @@ class RecordService{
         };
     }
 
-    static async getById(id, userId){
+    static async getById(id, userId, role){
 
         if(!id){
             throw new CustomError(
-                Enum.HTTP_CODES.NOT_FOUND,
+                Enum.HTTP_CODES.BAD_REQUEST,
                 "Validation Error!",
                 "record id is required."
             );
@@ -97,7 +99,7 @@ class RecordService{
             )
         }
 
-        if(record.user_id !== userId){
+        if(role !== "admin" && !record.user_id.equals(userId)){
             throw new CustomError(
                 Enum.HTTP_CODES.FORBIDDEN,
                 "Forbidden",
@@ -108,13 +110,21 @@ class RecordService{
         return record;
     }
 
-    static async update(id, data, userId){
+    static async update(id, data, userId, role){
 
         if(!id){
             throw new CustomError(
                 Enum.HTTP_CODES.BAD_REQUEST,
                 "Validation Error!",
                 "id must be filled"
+            );
+        }
+
+        if(!data){
+            throw new CustomError(
+                Enum.HTTP_CODES.BAD_REQUEST,
+                "Validation error",
+                "At least one field is required"
             );
         }
 
@@ -128,7 +138,7 @@ class RecordService{
             );
         }
 
-        if(record.user_id.toString() !== userId){
+        if(role !== "admin" && !record.user_id.equals(userId)){
             throw new CustomError(
                 Enum.HTTP_CODES.FORBIDDEN,
                 "Forbidden",
@@ -162,7 +172,7 @@ class RecordService{
         return updatedRecord;
     }
 
-    static async delete(id, userId){
+    static async delete(id, userId, role){
 
         if(!id){
             throw new CustomError(
@@ -182,7 +192,7 @@ class RecordService{
             );
         }
 
-        if(record.user_id.toString() !== userId){
+        if(role !== "admin" && record.user_id.toString() !== userId.toString()){
             throw new CustomError(
                 Enum.HTTP_CODES.FORBIDDEN,
                 "Forbidden",
@@ -193,7 +203,6 @@ class RecordService{
         const deletedRecord = await Records.findByIdAndDelete(id);
 
         return deletedRecord;
-
     }
 }
 
