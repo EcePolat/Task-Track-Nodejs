@@ -8,9 +8,20 @@ const Enum = require("../config/Enum");
 const Response = require("../lib/Response");
 
 router.post("/login", asyncHandler( async (req, res) => {
-
     const result = await AuthService.login(req.body);
     res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(result));
+}));
+
+router.post("/refresh", asyncHandler(async(req, res) => {
+    const { refreshToken } = req.body;
+    const tokens = await AuthService.refresh(refreshToken);
+    res.json(Response.successResponse(tokens));
+}));
+
+router.post("/logout", asyncHandler(async(req, res) => {
+    const { refreshToken } = req.body;
+    await AuthService.logout(refreshToken);
+    res.json(Response.successResponse({ success: true }));
 }));
 
 module.exports = router;
