@@ -40,14 +40,14 @@ router.put("/me", auth, asyncHandler( async (req, res) => {
 
 router.delete("/me", auth, asyncHandler( async (req, res) => {
 
-  await UserService.delete(req.user.id);
+  await UserService.delete(req.user.id, req.user.id);
   res.status(Enum.HTTP_CODES.OK).json(Response.successResponse({success: true}));
 
 }));
 
 router.delete("/:id", auth, permission(PRIVILEGES.USER_DELETE.key), asyncHandler(async(req, res) => {
 
-  await UserService.delete(req.params.id);
+  await UserService.delete(req.params.id, req.user.id);
   res.status(Enum.HTTP_CODES.OK).json(Response.successResponse({ success: true}));
 }));
 
