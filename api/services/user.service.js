@@ -3,8 +3,8 @@ const Enum = require("../config/Enum");
 const CustomError = require("../lib/Error");
 const is = require("is_js");
 const bcrypt = require("bcrypt");
-const Role = require("../db/models/Roles");
 const Roles = require("../db/models/Roles");
+const AuditLogService = require("./auditLog.service");
 
 class UserService{
 
@@ -160,9 +160,21 @@ class UserService{
         );
     }
 
-    static async delete(userId){
+    static async delete(targetUserId, actorUserId){
 
-        await Users.findByIdAndDelete(userId);
+        const user = await Users.findById(targetUserId);
+
+        await Users.findByIdAndDelete(targetUserId);
+
+        await AuditLogService.log({
+            userId: actorUserId,
+            action: "DELETE",
+            entity: "users",
+            entityId: targetUserId,
+            detail: {
+                email: user.email
+            }
+        });
 
         return { success: true};
     }

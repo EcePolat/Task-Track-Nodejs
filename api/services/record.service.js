@@ -1,6 +1,7 @@
 const Records = require("../db/models/Records");
 const CustomError = require("../lib/Error");
 const Enum = require("../config/Enum");
+const AuditLogService = require("./auditLog.service");
 
 class RecordService{
 
@@ -20,6 +21,16 @@ class RecordService{
             description: data.description,
             user_id: userId,
             status: Enum.RECORD_STATUS.OPEN
+        });
+
+        await AuditLogService.log({
+            userId,
+            action: "CREATE",
+            entity: "records",
+            entityId: record._id,
+            detail: {
+                title: record.title
+            }
         });
 
         return record;
@@ -169,6 +180,14 @@ class RecordService{
             }
         );
 
+        await AuditLogService.log({
+            userId,
+            action: "UPDATE",
+            entity: "records",
+            entityId: id,
+            detail: updates
+        });
+
         return updatedRecord;
     }
 
@@ -200,7 +219,26 @@ class RecordService{
             );
         }
 
+        if(record.status === "OPEN"){
+            throw new CustomError(
+                Enum.HTTP_CODES.BAD_REQUEST,
+                "Validation Error",
+                "Open record cannot be deleted. Please close it first."
+            );
+        }
+
         const deletedRecord = await Records.findByIdAndDelete(id);
+
+        await AuditLogService.log({
+            userId,
+            action: "DELETE",
+            entity: "record",
+            entityId: id,
+            detail: {
+                title: record.title,
+                status: record.status
+            }
+        });
 
         return deletedRecord;
     }

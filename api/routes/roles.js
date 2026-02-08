@@ -10,7 +10,7 @@ const permission = require("../middlewares/permission");
 const { PRIVILEGES } = require("../config/privileges");
 
 router.post("/", auth, permission(PRIVILEGES.ROLE_CREATE.key), asyncHandler ( async(req, res) => {
-    const role = await RoleService.create(req.body);
+    const role = await RoleService.create(req.body, req.user.id);
     res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(role));
 }));
 
@@ -32,12 +32,12 @@ router.get("/:id", auth, permission(PRIVILEGES.ROLE_VIEW.key), asyncHandler (asy
 }));
 
 router.put("/:id", auth, permission(PRIVILEGES.ROLE_UPDATE.key), asyncHandler ( async (req, res) => {
-    const updatedRole = await RoleService.update(req.params.id, req.body);
+    const updatedRole = await RoleService.update(req.params.id, req.body, req.user.id);
     res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(updatedRole));
 }));
 
 router.delete("/:id", auth, permission(PRIVILEGES.ROLE_DELETE.key), asyncHandler( async(req, res) => {
-    await RoleService.delete(req.params.id);
+    await RoleService.delete(req.params.id, req.user.id);
     res.status(Enum.HTTP_CODES.OK).json(Response.successResponse({success: true}));
 }));
 
