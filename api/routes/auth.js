@@ -6,8 +6,9 @@ const asyncHandler = require("../middlewares/asyncHandler");
 const errorHandler = require("../middlewares/errorHandler");
 const Enum = require("../config/Enum");
 const Response = require("../lib/Response");
+const rateLimit = require("../middlewares/rateLimit");
 
-router.post("/login", asyncHandler( async (req, res) => {
+router.post("/login", rateLimit, asyncHandler( async (req, res) => {
     const result = await AuthService.login(req.body);
     res.status(Enum.HTTP_CODES.OK).json(Response.successResponse(result));
 }));
