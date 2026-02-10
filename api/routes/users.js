@@ -10,6 +10,43 @@ const auth = require("../middlewares/auth");
 const permission = require("../middlewares/permission");
 const { PRIVILEGES } = require("../config/privileges");
 
+/**
+ * @swagger
+ * /users:
+ *    post:
+ *      summary: Kullanıcı oluştur
+ *      tags:
+ *        - Users
+ *      requestBody:
+ *        required: true
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              required:
+ *                - email
+ *                - password
+ *                - role_id
+ *              properties:
+ *                email:
+ *                  type: string
+ *                  format: email
+ *                password:
+ *                  type: string
+ *                  example: 12345678
+ *                firstname:
+ *                  type: string
+ *                  example: Ece
+ *                lastname:
+ *                  type: string
+ *                  example: Polat
+ *                role_id:
+ *                  type: string
+ *                  example: 696e5b4665656
+ *      responses:
+ *        201:
+ *          description: kullanıcı oluşturuldu
+ */
 router.post('/', asyncHandler(async (req, res) => {
 
   const user = await UserService.create(req.body);
@@ -17,6 +54,19 @@ router.post('/', asyncHandler(async (req, res) => {
 
 }));
 
+/**
+ * @swagger
+ * /users:
+ *    get:
+ *      summary: Kullanıcıları listele
+ *      tags:
+ *        - Users
+ *      security:
+ *        - bearerAuth: []
+ *      responses:
+ *        200:
+ *          description: Kullanıcı listesi
+ */
 router.get("/", auth, permission(PRIVILEGES.USER_VIEW.key), asyncHandler( async(req, res) => {
 
   const users = await UserService.list(req.query);
@@ -24,6 +74,26 @@ router.get("/", auth, permission(PRIVILEGES.USER_VIEW.key), asyncHandler( async(
 
 }));
 
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     summary: ID ile kullanıcı getir
+ *     tags:
+ *       - Users
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Kullanıcı ID
+ *     responses:
+ *       200:
+ *         description: Kullanıcı bilgisi
+ */
 router.get("/:id", auth, permission(PRIVILEGES.USER_VIEW.key), asyncHandler(async (req, res) => {
 
   const user = await UserService.getById(req.params.id);
@@ -31,6 +101,34 @@ router.get("/:id", auth, permission(PRIVILEGES.USER_VIEW.key), asyncHandler(asyn
 
 }));
 
+/**
+ * @swagger
+ * /users/me:
+ *   put:
+ *     summary: Giriş yapan kullanıcının bilgilerini güncelle
+ *     tags:
+ *       - Users
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                email:
+ *                  type: string
+ *                firstname:
+ *                  type: string
+ *                lastname:
+ *                  type: string
+ *                password:
+ *                  type: string
+ *     responses:
+ *       200:
+ *         description: Güncellenmiş kullanıcı bilgisi
+ */
 router.put("/me", auth, asyncHandler( async (req, res) => {
 
   const updatedUser = await UserService.update(req.user.id, req.body);
@@ -38,6 +136,19 @@ router.put("/me", auth, asyncHandler( async (req, res) => {
 
 }));
 
+/**
+ * @swagger
+ * /users/me:
+ *   delete:
+ *     summary: Giriş yapan kullanıcının hesabını silmesi
+ *     tags:
+ *       - Users
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Silme işlemi başarılı
+ */
 router.delete("/me", auth, asyncHandler( async (req, res) => {
 
   await UserService.delete(req.user.id, req.user.id);
@@ -45,6 +156,27 @@ router.delete("/me", auth, asyncHandler( async (req, res) => {
 
 }));
 
+/**
+ * @swagger
+ * /users/{id}:
+ *   delete:
+ *     summary: ID ile kullanıcı sil
+ *     description: USER_DELETE yetkisi gerektirir
+ *     tags:
+ *       - Users
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Silinecek kullanıcı ID
+ *     responses:
+ *       200:
+ *         description: Kullanıcı başarıyla silindi
+ */
 router.delete("/:id", auth, permission(PRIVILEGES.USER_DELETE.key), asyncHandler(async(req, res) => {
 
   await UserService.delete(req.params.id, req.user.id);
