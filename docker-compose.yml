@@ -1,0 +1,24 @@
+services: 
+  app:
+    build: ./api
+    image: eceplt/task-track:latest
+    container_name: task-track-api
+    env_file:
+      - api/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+    restart: always
+
+  mongo:
+    image: mongo:7
+    container_name: task-track-mongo
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    restart: always
+
+volumes:
+  mongo_data:
